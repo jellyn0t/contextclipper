@@ -22,7 +22,7 @@ import { pickSources, renderSourceMode } from './sources.js';
 import { state, layoutSettings } from './state.js';
 import { CONFIG } from './config.js';
 import {
-    videoArea, videoEl, filePicker, urlInput, urlLoadBtn, loadingOverlay,
+    videoArea, videoEl, filePicker, loadingOverlay,
     fileInfo, fileNameEl, clearBtn, startInput, endInput, durationDisplay, playBtn,
     overviewSection, detailSection, ffmpegSection, ffmpegCmd, copyBtn, loopBtn,
     shortcutsPanel, controlsRow, labelInput, labelLock, clipListSection,
@@ -403,63 +403,6 @@ function clearVideo() {
     clipListSection.classList.remove('visible');
 }
 
-// ---- Load from URL ----
-
-// No default URL — users paste their own or drop a file. (A bundled
-// sample isn't shipped: it would exceed GitHub Pages' 100MiB file cap.)
-
-async function loadURL(url) {
-    url = url.trim();
-    if (!url) return;
-
-    // Show loading state
-    videoEl.style.display = 'block';
-    videoEl.classList.add('hidden');
-    videoArea.classList.add('has-video');
-    showLoading();
-    setLoadingProgress(0, 'Fetching video...');
-
-    try {
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
-
-        const contentLength = +resp.headers.get('Content-Length');
-        const contentType = resp.headers.get('Content-Type') || 'video/mp4';
-
-        // Stream the response to track download progress
-        const reader = resp.body.getReader();
-        const chunks = [];
-        let received = 0;
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            received += value.length;
-            if (contentLength) {
-                setLoadingProgress(Math.round((received / contentLength) * 80), 'Downloading...');
-            }
-        }
-
-        const blob = new Blob(chunks, { type: contentType });
-        const name = url.split('/').pop().split('?')[0] || 'video.mp4';
-        const file = new File([blob], name, { type: contentType });
-
-        hideLoading();
-        videoEl.style.display = 'none';
-        videoEl.classList.remove('hidden');
-        videoArea.classList.remove('has-video');
-
-        await loadFile(file);
-    } catch (err) {
-        hideLoading();
-        videoEl.style.display = 'none';
-        videoEl.classList.remove('hidden');
-        videoArea.classList.remove('has-video');
-        alert('Failed to load URL: ' + err.message);
-    }
-}
-
 // ---- Loop toggle ----
 
 function toggleLoop() {
@@ -493,15 +436,6 @@ videoArea.addEventListener('click', (e) => {
 filePicker.addEventListener('change', () => {
     if (filePicker.files[0]) loadFile(filePicker.files[0]);
 });
-
-// URL load
-urlLoadBtn.addEventListener('click', () => loadURL(urlInput.value));
-urlInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') loadURL(urlInput.value);
-});
-// Prevent click-to-browse when interacting with URL input
-urlInput.addEventListener('click', (e) => e.stopPropagation());
-urlLoadBtn.addEventListener('click', (e) => e.stopPropagation());
 
 // Clear button
 clearBtn.addEventListener('click', clearVideo);

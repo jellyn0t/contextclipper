@@ -585,10 +585,6 @@ body {
     gap: 8px;
     color: var(--monitor-dim);
     pointer-events: none;
-    /* Width relative to the drop zone (not the shrink-wrapped text) so
-       the url-row's percentage resolves against .video-area. The column
-       still centers its children via align-items. */
-    width: 50%;
 }
 
 .drop-prompt svg { opacity: 0.4; }
@@ -601,49 +597,6 @@ body {
 .drop-prompt .sub-text {
     font-size: 12px;
     color: var(--monitor-dim);
-}
-
-.drop-prompt .url-row {
-    display: flex;
-    gap: 6px;
-    margin-top: 8px;
-    pointer-events: auto;
-    width: min(720px, 90%);
-}
-
-.drop-prompt .url-row input {
-    flex: 1;
-    min-width: 0;
-    padding: 6px 10px;
-    border: 1px solid var(--screen-border);
-    border-radius: 3px;
-    background: var(--screen-void);
-    color: var(--monitor-glow);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.drop-prompt .url-row input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent), 0 0 8px rgba(var(--accent-rgb), 0.25);
-}
-
-.drop-prompt .url-row button {
-    padding: 6px 14px;
-    border: 1px solid var(--accent);
-    border-radius: 4px;
-    background: var(--accent-tint);
-    color: var(--accent-glow);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.drop-prompt .url-row button:hover {
-    background: var(--accent-bg-hover);
 }
 
 video {

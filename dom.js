@@ -7,8 +7,6 @@
 export const videoArea = document.getElementById('videoArea');
 export const videoEl = document.getElementById('videoEl');
 export const filePicker = document.getElementById('filePicker');
-export const urlInput = document.getElementById('urlInput');
-export const urlLoadBtn = document.getElementById('urlLoadBtn');
 export const loadingOverlay = document.getElementById('loadingOverlay');
 export const fileInfo = document.getElementById('fileInfo');
 export const fileNameEl = document.getElementById('fileName');
