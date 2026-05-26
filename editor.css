@@ -1,0 +1,2164 @@
+:root {
+    color-scheme: dark;
+    /* Surfaces — pushed further apart so "raised" actually feels lifted.
+       Surfaces stay neutral across themes; only the accent ramp shifts. */
+    --screen-void: #0b0d12;
+    --screen-dark: #15181f;
+    --screen-raised: #21252f;
+    --screen-elevated: #2a2f3b;
+    --screen-border: #353a47;
+    /* Phosphor-cast text — derived from --phosphor-hue so themes
+       shift the entire text family in lockstep with the accent. Each
+       theme overrides --phosphor-hue (the amber default is 43°).
+       Saturation/lightness stay constant across themes so the
+       cream/dim/bright ramp keeps the same perceptual rank; only the
+       hue rotates. */
+    --phosphor-hue: 48;
+    --monitor-glow: hsl(var(--phosphor-hue), 56%, 76%);
+    /* Dim was at 44% lightness — readable on the dark page background
+       but low-contrast against the elevated modal surface. Bumped to
+       58% with a touch more saturation so modal labels, hints, and
+       etched section headers all read clearly across every theme,
+       while still ranking visibly quieter than --monitor-glow. */
+    --monitor-dim: hsl(var(--phosphor-hue), 30%, 58%);
+    --monitor-bright: hsl(var(--phosphor-hue), 100%, 91%);
+    --overlay-text: hsl(var(--phosphor-hue), 50%, 64%);
+    --overlay-text-dim: hsl(var(--phosphor-hue), 30%, 58%);
+    /* ---- Theme accent ramp ----
+       Three RGB triplets define the entire accent palette: base, glow,
+       bright. Every alpha tint elsewhere in the file composes from
+       these via rgba(var(--accent-*-rgb), X). To add a theme, override
+       the three -rgb triplets and the two --accent-bg shades — the
+       rest of the page rebases automatically. */
+    /* Yellower amber — matches the original waveform highlight color
+       (#eab308) which was the most vibrant amber-yellow in the app
+       before theming. Was #d97706 → #f59e0b → #fcd34d at 32°/36°/46°;
+       now #eab308 → #facc15 → #fde047 sitting at 46°/51°/53° — a more
+       saturated yellow-gold ramp. */
+    --accent-rgb: 234, 179, 8;
+    --accent-glow-rgb: 250, 204, 21;
+    --accent-bright-rgb: 253, 224, 71;
+    --accent: rgb(var(--accent-rgb));
+    --accent-glow: rgb(var(--accent-glow-rgb));
+    --accent-bright: rgb(var(--accent-bright-rgb));
+    --accent-dim: rgba(var(--accent-rgb), 0.6);
+    --accent-tint: rgba(var(--accent-rgb), 0.12);
+    --accent-bg: #2c2812;
+    --accent-bg-hover: #383215;
+    --screen-border-warm: rgba(var(--accent-glow-rgb), 0.18);
+    /* Halo shadow for the brand mark — soft phosphor bloom of the
+       accent. Themed automatically via the rgb tokens above. */
+    --halo-amber: 0 0 8px rgba(var(--accent-glow-rgb), 0.55), 0 0 18px rgba(var(--accent-rgb), 0.32);
+    --halo-soft: 0 0 6px rgba(var(--accent-glow-rgb), 0.35);
+    --black: #000;
+    --success: #4ade80;
+    --success-bright: #86efac;
+    --danger: #f87171;
+    --danger-bg: #2a1a1a;
+    --danger-bg-hover: #351a1a;
+    --progress-blue: #3b82f6;
+    /* Display font for the title + section labels — Share Tech Mono
+       has the broadcast-equipment / oscilloscope vibe the surfaces
+       are reaching for. Body font is JetBrains Mono so the entire
+       interface reads as one piece of instrumentation. */
+    --font-header: 'Jersey 10', 'Share Tech Mono', 'JetBrains Mono', monospace;
+    --font-display: 'Share Tech Mono', 'JetBrains Mono', ui-monospace, monospace;
+    --font-primary: 'JetBrains Mono', 'SF Mono', 'Consolas', ui-monospace, monospace;
+    --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', ui-monospace, monospace;
+}
+
+/* ---- Theme variants ----
+   Each block overrides the three accent-*-rgb tokens plus the two
+   accent-bg shades. Everything else in the file (halos, focus rings,
+   button fills, status pills, scrubber glow, etc.) recomposes from
+   those automatically. The "warm cream" phosphor text stays the same
+   across themes, so the page still reads as an instrument — only the
+   indicator hue changes. */
+[data-theme="blue"] {
+    /* Brighter ramp — the previous #1d4ed8 base was too dark to read
+       as a 1px border on the dark button surface. Bumping accent to
+       blue-600 (#2563eb) and glow to blue-400 (#60a5fa) restores
+       legibility while keeping the cool palette identity. */
+    --accent-rgb: 37, 99, 235;
+    --accent-glow-rgb: 96, 165, 250;
+    --accent-bright-rgb: 147, 197, 253;
+    --accent-bg: #1e2a4d;
+    --accent-bg-hover: #25335c;
+    --phosphor-hue: 215;
+}
+
+[data-theme="green"] {
+    --accent-rgb: 21, 128, 61;
+    --accent-glow-rgb: 34, 197, 94;
+    --accent-bright-rgb: 134, 239, 172;
+    --accent-bg: #15291d;
+    --accent-bg-hover: #1a3526;
+    --phosphor-hue: 142;
+}
+
+[data-theme="purple"] {
+    --accent-rgb: 124, 58, 237;
+    --accent-glow-rgb: 168, 85, 247;
+    --accent-bright-rgb: 216, 180, 254;
+    --accent-bg: #251a3d;
+    --accent-bg-hover: #2e2147;
+    --phosphor-hue: 275;
+}
+
+[data-theme="pink"] {
+    --accent-rgb: 190, 24, 93;
+    --accent-glow-rgb: 236, 72, 153;
+    --accent-bright-rgb: 249, 168, 212;
+    --accent-bg: #3d1a2b;
+    --accent-bg-hover: #471f33;
+    --phosphor-hue: 333;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    /* Subtle radial warmth at the top — like the inside of a powered-on
+       monitor where the phosphor coating glows faintly at rest. */
+    background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(var(--accent-rgb), 0.06), transparent 70%),
+        var(--screen-void);
+    color: var(--monitor-glow);
+    font-family: var(--font-primary);
+    font-size: 13px;
+    line-height: 1.55;
+    min-height: 100vh;
+    letter-spacing: 0.01em;
+}
+
+::selection {
+    background: rgba(var(--accent-glow-rgb), 0.35);
+    color: var(--monitor-bright);
+}
+
+/* Layout — default is now what used to be "maximized": 1200px wide,
+   header full-width, main content + sidebar side-by-side. The new
+   maximized mode (toggled with `f`) widens to --expanded-width and
+   caps the height at 100vh so everything fits without scrolling.
+   Grid layout because flex-wrap was getting fragile; grid lets us
+   collapse the sidebar column cleanly via :has(). */
+.app {
+    --normal-width: 1200px;
+    --expanded-width: 1800px;
+    max-width: var(--normal-width);
+    margin: 0 auto;
+    padding: 20px 20px;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 16px;
+    min-height: 100vh;
+}
+
+.app:has(.sidebar.visible) {
+    grid-template-columns: 1fr 280px;
+}
+
+.app > .header {
+    grid-column: 1 / -1;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Sidebar (transcript + bookmarks) — shown when either inner section
+   has content. Sits in the right grid column with its own scroll. */
+.sidebar {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    border-left: 1px solid var(--screen-border);
+    padding-left: 16px;
+    min-height: 0;
+}
+
+.sidebar.visible {
+    display: flex;
+}
+
+.sidebar .clip-list-section.visible {
+    flex-shrink: 0;
+    border-top: 1px solid var(--screen-border);
+    padding-top: 8px;
+}
+
+/* Inside the 280px column, clip rows wrap so the action buttons
+   don't get cut off — applies in both normal and maximized. */
+.sidebar .clip-item {
+    flex-wrap: wrap;
+}
+
+.sidebar .clip-item-label {
+    white-space: normal;
+    word-break: break-word;
+}
+
+.sidebar .clip-item-actions {
+    width: 100%;
+    padding-left: 16px;
+    opacity: 1;
+}
+
+.app > .shortcuts-panel {
+    grid-column: 1 / -1;
+}
+
+/* Maximized — wider AND fit-to-viewport. The video grows to fill
+   whatever vertical space the waveforms/controls/ffmpeg row leave
+   behind, so the whole tool sits on one screen with no body scroll. */
+.app.maximized {
+    max-width: var(--expanded-width);
+    min-height: 0;
+    height: 100vh;
+    padding: 14px 20px;
+}
+
+.app.maximized .video-player-glow {
+    flex: 1;
+    min-height: 0;
+}
+
+.app.maximized .video-area {
+    flex: 1;
+    min-height: 0;
+    /* Flex sizing wins over the .has-video aspect-ratio placeholder
+       here — the video grows to fill whatever vertical space the
+       waveforms/controls/ffmpeg leave behind. */
+    aspect-ratio: auto;
+}
+
+/* Sidebar follows the structural split of the main column: transcript
+   is locked to the video's height (so it sits "mounted" next to the
+   player), and the bookmarks fill the rest of the column next to the
+   waveforms / controls / ffmpeg row. Applies in both default and
+   maximized — the only difference is how tall the column is overall.
+   +8px on the transcript height accounts for the .video-player-glow's
+   top padding so the section's bottom edge lines up with the video
+   frame, not the glow's outer edge. */
+.app.maximized .sidebar.visible {
+    overflow: hidden;
+}
+
+.sidebar .transcript-section.visible {
+    flex: none;
+    height: calc(var(--video-height, 60vh) + 8px);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.sidebar .transcript-list {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+}
+
+.sidebar .clip-list-section.visible {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar .clip-list {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+}
+
+
+.header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding-bottom: 14px;
+    /* Etched amber rule under the header — thin, slightly glowing, sells
+       the rack-module feel for the whole page in one detail. */
+    border-bottom: 1px solid var(--screen-border);
+    box-shadow: 0 1px 0 0 rgba(var(--accent-glow-rgb), 0.06);
+    position: relative;
+}
+
+/* Tick mark at the start of the rule — the kind of detail you'd see
+   on the bezel of an oscilloscope panel. */
+.header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 32px;
+    height: 1px;
+    background: var(--accent);
+    box-shadow: var(--halo-soft);
+}
+
+/* Dim control */
+.dim-control {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dim-btn {
+    background: none;
+    border: none;
+    color: var(--monitor-dim);
+    cursor: pointer;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s;
+}
+
+.dim-btn:hover { color: var(--monitor-glow); }
+.dim-btn.active { color: var(--accent); }
+
+.dim-slider {
+    width: 60px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--screen-raised);
+    border: 1px solid var(--screen-border);
+    border-radius: 2px;
+    cursor: pointer;
+    outline: none;
+}
+
+/* WebKit needs an explicit track rule — `appearance: none` strips
+   the default rendering; without this rule the track is invisible. */
+.dim-slider::-webkit-slider-runnable-track {
+    height: 4px;
+    background: transparent;
+    border-radius: 2px;
+}
+
+.dim-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    background: var(--monitor-dim);
+    border-radius: 50%;
+    cursor: pointer;
+    /* Pull the thumb up so its center aligns with the 4px track center
+       (Chrome doesn't auto-center the thumb when `appearance: none`). */
+    margin-top: -3px;
+    transition: background 0.15s;
+}
+
+.dim-slider::-webkit-slider-thumb:hover {
+    background: var(--monitor-glow);
+}
+
+.dim-slider::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    background: var(--monitor-dim);
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.dim-slider::-moz-range-thumb:hover {
+    background: var(--monitor-glow);
+}
+
+.dim-slider::-moz-range-track {
+    height: 4px;
+    background: transparent;
+    border-radius: 2px;
+}
+
+/* Video dim overlay */
+.video-dim-overlay {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    pointer-events: none;
+    border-radius: 10px;
+    transition: background 0.15s;
+}
+
+/* Dimming applies to the loaded video only — never the empty upload box.
+   The overlay paints above .drop-prompt in source order, so keep it out
+   of the DOM flow until a video is present. */
+.video-area:not(.has-video) .video-dim-overlay { display: none; }
+
+.maximize-btn {
+    background: none;
+    border: 1px solid var(--screen-border);
+    border-radius: 4px;
+    color: var(--monitor-dim);
+    cursor: pointer;
+    padding: 3px 5px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.maximize-btn:hover {
+    color: var(--monitor-glow);
+    border-color: var(--monitor-dim);
+}
+
+.header h1 {
+    font-family: var(--font-header);
+    /* Jersey 10 is a pixel display face — characters read smaller per
+       em than the previous Share Tech Mono and it has its own built-in
+       spacing, so bump the size and drop most of the tracking. */
+    font-size: 30px;
+    font-weight: 400;
+    color: var(--accent-bright);
+    letter-spacing: 0.02em;
+    text-shadow: var(--halo-amber);
+}
+
+.header .subtitle {
+    font-size: 11px;
+    font-style: italic;
+    color: var(--monitor-dim);
+    letter-spacing: 0.02em;
+}
+
+/* Source-mode pill — shows whether ffmpeg/Whisper come from local
+   vendor/ or from CDN. Set by pickSources() after a quick HEAD probe. */
+.source-mode {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-family: var(--font-display);
+    letter-spacing: 0.12em;
+    border: 1px solid var(--screen-border);
+    border-radius: 2px;
+    color: var(--monitor-dim);
+    background: var(--screen-raised);
+    cursor: help;
+    position: relative;
+}
+
+/* Status-LED dot prefix — every mode gets one, the color signals state.
+   This is what a real instrument front-panel does: a label and a tiny
+   indicator next to it that you can read at a glance. */
+.source-mode::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+    background: var(--monitor-dim);
+    box-shadow: 0 0 4px currentColor;
+}
+
+.source-mode[data-mode="local"] {
+    color: var(--success);
+    border-color: rgba(74, 222, 128, 0.4);
+    text-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
+}
+.source-mode[data-mode="local"]::before {
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success-bright);
+}
+
+.source-mode[data-mode="cdn"] {
+    color: var(--accent-glow);
+    border-color: var(--accent-dim);
+    text-shadow: 0 0 4px rgba(var(--accent-glow-rgb), 0.4);
+}
+.source-mode[data-mode="cdn"]::before {
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent-glow);
+}
+
+.source-mode[data-mode="mixed"] {
+    color: var(--accent-bright);
+    border-color: var(--accent-dim);
+    text-shadow: 0 0 4px rgba(var(--accent-bright-rgb), 0.4);
+}
+.source-mode[data-mode="mixed"]::before {
+    background: var(--accent-bright);
+    box-shadow: 0 0 6px var(--accent-bright);
+}
+
+
+/* Drop zone / video area */
+.video-area {
+    position: relative;
+    background: var(--screen-dark);
+    border: 2px dashed var(--screen-border);
+    /* Match the glow ::before's 10px so the rainbow ring and the video
+       frame have concentric corners — was 6px, which left a 4px gap
+       between the curves. */
+    border-radius: 10px;
+    /* Normalize empty/loaded sizing — the empty drop zone fills the
+       same 16:9 box a 1080p video would, so the page doesn't shift
+       proportions between "no file" and "file dropped" states.
+       .video-area.has-video updates --video-aspect from JS once
+       metadata loads. In maximized mode .app.maximized .video-area
+       overrides with aspect-ratio: auto + flex: 1 to fill the
+       viewport instead. */
+    aspect-ratio: var(--video-aspect, 16 / 9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+    overflow: hidden;
+}
+
+.video-area.drag-over {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.06);
+}
+
+.video-area.has-video {
+    border-style: solid;
+    border-color: var(--screen-border);
+    min-height: 0;
+    overflow: visible;
+    z-index: 1;
+    /* Reserve an aspect-ratio'd box the moment a file is dropped so the
+       page doesn't jump from the 220px drop-zone height to the video's
+       full natural height when metadata lands. --video-aspect is set
+       by JS on loadedmetadata to the real ratio; 16:9 is the placeholder
+       and matches most modern content. In maximized mode the flex
+       sizing wins, so this is a no-op there. */
+    aspect-ratio: var(--video-aspect, 16 / 9);
+}
+
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Padded wrap so the inward-inset glow has room to render around
+   .video-area without overlapping it. 12px padding − 8px inset =
+   4px visible ring of glow on each side. Ported from frontend/app.css
+   .video-player-glow — uniform border regardless of where the player
+   sits in its container, and opacity:1 on hover for full brightness. */
+.video-player-glow {
+    position: relative;
+    z-index: 1;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.video-player-glow::before {
+    content: '';
+    position: absolute;
+    display: block;
+    z-index: -1;
+    inset: 4px;
+    border-radius: 10px;
+    opacity: 0;
+    background: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
+    background-size: 300% 300%;
+    animation: gradient-shift 3s ease infinite;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Rainbow glow on hover — in both the empty upload state and once a
+   video is loaded. */
+.video-player-glow:hover::before {
+    opacity: 1;
+}
+
+.drop-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--monitor-dim);
+    pointer-events: none;
+    /* Width relative to the drop zone (not the shrink-wrapped text) so
+       the url-row's percentage resolves against .video-area. The column
+       still centers its children via align-items. */
+    width: 50%;
+}
+
+.drop-prompt svg { opacity: 0.4; }
+
+.drop-prompt .main-text {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.drop-prompt .sub-text {
+    font-size: 12px;
+    color: var(--monitor-dim);
+}
+
+.drop-prompt .url-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    pointer-events: auto;
+    width: min(720px, 90%);
+}
+
+.drop-prompt .url-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px;
+    border: 1px solid var(--screen-border);
+    border-radius: 3px;
+    background: var(--screen-void);
+    color: var(--monitor-glow);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.drop-prompt .url-row input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 0 8px rgba(var(--accent-rgb), 0.25);
+}
+
+.drop-prompt .url-row button {
+    padding: 6px 14px;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    background: var(--accent-tint);
+    color: var(--accent-glow);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.drop-prompt .url-row button:hover {
+    background: var(--accent-bg-hover);
+}
+
+video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: var(--black);
+    border-radius: 8px;
+}
+
+video.hidden { visibility: hidden; }
+
+.video-area.has-video .drop-prompt { display: none; }
+
+/* Custom video controls — sit at the bottom edge of the video area with
+   a gradient fade behind them for legibility on bright content. z-index
+   above the dim overlay so dimming the video doesn't hide the controls. */
+.video-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px 12px;
+    /* Stronger fade — the bottom band stays near-opaque so controls
+       remain legible on bright frames; the falloff is tall so the
+       transition to the video content is gentle, not a hard line. */
+    background: linear-gradient(to top,
+        rgba(0, 0, 0, 0.95) 0%,
+        rgba(0, 0, 0, 0.85) 35%,
+        rgba(0, 0, 0, 0.5) 70%,
+        rgba(0, 0, 0, 0) 100%);
+    padding-top: 28px;
+    border-radius: 0 0 8px 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--monitor-glow);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.18s ease-out;
+}
+
+.video-area.has-video .video-controls {
+    display: flex;
+}
+
+/* Surface controls on hover, on keyboard focus inside the bar, and
+   while a scrub is in progress (so the bar doesn't disappear mid-drag
+   if the pointer drifts off the video area). */
+.video-area.has-video:hover .video-controls,
+.video-area.has-video .video-controls:focus-within,
+.video-area.has-video .vc-scrubber.scrubbing ~ *,
+.video-area.has-video:has(.vc-scrubber.scrubbing) .video-controls {
+    opacity: 1;
+}
+
+/* Re-enable input on the actual interactive children. Keeping the bar
+   itself pointer-events: none lets clicks on the gradient fade pass
+   through to the video, which feels nicer than a "dead zone" above
+   the buttons. */
+.video-controls > * { pointer-events: auto; }
+
+.vc-btn {
+    background: none;
+    border: none;
+    color: var(--monitor-glow);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    flex-shrink: 0;
+    transition: color 0.15s, background 0.15s;
+}
+
+.vc-btn:hover {
+    color: var(--accent-glow);
+    background: rgba(var(--accent-glow-rgb), 0.12);
+}
+
+.vc-time {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--monitor-glow);
+    white-space: nowrap;
+    /* Enough room for "59:59 / 99:59" plus breathing space — keeps the
+       scrubber from shifting horizontally as the playhead advances. */
+    min-width: 96px;
+    text-align: center;
+    letter-spacing: 0.04em;
+}
+
+.vc-scrubber {
+    flex: 1;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    /* Vertically pad the hitbox so the scrubber is easier to click
+       without enlarging the visible track. */
+    margin: 8px 0;
+}
+
+.vc-scrubber::before {
+    content: '';
+    position: absolute;
+    inset: -8px 0;
+}
+
+.vc-scrubber-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(var(--accent-glow-rgb), 0.5);
+    pointer-events: none;
+    transition: background 0.15s;
+}
+
+.vc-scrubber:hover .vc-scrubber-fill {
+    background: var(--accent-glow);
+}
+
+/* Thumb dot at the leading edge of the fill — appears on hover so the
+   resting state stays minimal. */
+.vc-scrubber-fill::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    background: var(--accent-glow);
+    border-radius: 50%;
+    transform: translateY(-50%) scale(0);
+    transition: transform 0.15s;
+    box-shadow: 0 0 6px rgba(var(--accent-glow-rgb), 0.6);
+}
+
+.vc-scrubber:hover .vc-scrubber-fill::after,
+.vc-scrubber.scrubbing .vc-scrubber-fill::after {
+    transform: translateY(-50%) scale(1);
+}
+
+.vc-volume {
+    width: 60px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 2px;
+    cursor: pointer;
+    outline: none;
+    flex-shrink: 0;
+}
+
+.vc-volume::-webkit-slider-runnable-track {
+    height: 4px;
+    background: transparent;
+    border-radius: 2px;
+}
+
+.vc-volume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    background: var(--accent-glow);
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: -3px;
+    box-shadow: 0 0 4px rgba(var(--accent-glow-rgb), 0.5);
+    transition: background 0.15s;
+}
+
+.vc-volume::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    background: var(--accent-glow);
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 0 4px rgba(var(--accent-glow-rgb), 0.5);
+}
+
+.vc-volume::-moz-range-track {
+    height: 4px;
+    background: transparent;
+    border-radius: 2px;
+}
+
+/* File info bar */
+.file-info {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--monitor-dim);
+}
+
+.file-info.visible { display: flex; }
+
+.file-info .filename {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+.file-info .clear-btn {
+    background: none;
+    border: 1px solid var(--screen-border);
+    color: var(--monitor-dim);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.file-info .clear-btn:hover {
+    color: var(--monitor-glow);
+    border-color: var(--monitor-dim);
+}
+
+/* (timecodes and play-btn styles removed — now in controls-row) */
+
+/* Waveform sections */
+.waveform-section {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.waveform-section.visible { display: flex; }
+
+/* Section labels — quiet by design. Keep the display font + // prefix
+   for character, but drop the amber glow so the H1 and modal headings
+   stay the only things that "light up." Five amber-glowing section
+   labels on one page was reading as "everything is important." */
+.wf-label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--monitor-dim);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wf-label::before {
+    content: '//';
+    color: var(--screen-border);
+    font-weight: 400;
+}
+
+.wf-wrap {
+    border: 1px solid var(--screen-border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+waveform-editor {
+    display: block;
+    width: 100%;
+    touch-action: none;
+}
+
+time-ruler {
+    display: block;
+    width: 100%;
+    height: 20px;
+}
+
+/* FFmpeg section */
+.ffmpeg-section {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ffmpeg-section.visible { display: flex; }
+
+.ffmpeg-section .wf-label { margin-bottom: 0; }
+
+.ffmpeg-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.ffmpeg-cmd {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 12px 8px 28px;
+    background:
+        linear-gradient(90deg, rgba(var(--accent-rgb), 0.04) 0, transparent 60%),
+        var(--screen-void);
+    border: 1px solid var(--screen-border);
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--monitor-glow);
+    white-space: nowrap;
+    overflow-x: auto;
+    line-height: 1.5;
+    position: relative;
+    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Terminal prompt prefix — sells the readout-from-a-shell feel. */
+.ffmpeg-cmd::before {
+    content: '$';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent-glow);
+    text-shadow: var(--halo-soft);
+    font-weight: 700;
+    pointer-events: none;
+}
+
+.copy-btn {
+    background: var(--screen-raised);
+    border: 1px solid var(--screen-border);
+    border-radius: 4px;
+    color: var(--monitor-dim);
+    font-size: 12px;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.copy-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+}
+
+.copy-btn.copied {
+    color: var(--success);
+    border-color: var(--success);
+}
+
+/* Encode button & progress */
+.encode-btn-main {
+    background: var(--accent-bg);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    color: var(--monitor-glow);
+    font-size: 12px;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.encode-btn-main:hover {
+    background: var(--accent-bg-hover);
+    border-color: var(--accent-glow);
+}
+
+.encode-btn-main:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.encode-progress {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.encode-progress.visible { display: flex; }
+
+.encode-progress-bar {
+    height: 4px;
+    background: var(--screen-dark);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.encode-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.15s;
+}
+
+.encode-progress-text {
+    font-size: 10px;
+    color: var(--monitor-dim);
+    font-family: var(--font-mono);
+}
+
+/* Transcript section */
+.transcript-section {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.transcript-section.visible { display: flex; }
+
+.transcript-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.transcribe-btn {
+    background: var(--screen-raised);
+    border: 1px solid var(--screen-border);
+    border-radius: 4px;
+    color: var(--monitor-dim);
+    font-size: 11px;
+    padding: 2px 10px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.transcribe-btn:hover {
+    color: var(--monitor-glow);
+    border-color: var(--monitor-dim);
+}
+
+.transcribe-btn.active {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+    cursor: default;
+}
+
+.transcript-progress {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.transcript-progress.visible { display: flex; }
+
+.transcript-progress-bar {
+    height: 4px;
+    background: var(--screen-dark);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.transcript-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.15s;
+}
+
+.transcript-progress-text {
+    font-size: 10px;
+    color: var(--monitor-dim);
+    font-family: var(--font-mono);
+}
+
+.transcript-list {
+    max-height: 240px;
+    overflow-y: auto;
+    background: var(--screen-dark);
+    border: 1px solid var(--screen-border);
+    border-radius: 4px;
+}
+
+/* Heads-up shown above the model line for long videos (see
+   updateTranscriptDefault) — transcribing them is slow and memory-heavy. */
+.transcript-warning {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding: 8px 10px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--accent-glow);
+    background: var(--accent-tint);
+    border: 1px solid var(--accent-dim);
+    border-radius: 4px;
+}
+
+.transcript-warning .tw-icon { flex-shrink: 0; }
+
+.transcript-segment {
+    display: flex;
+    gap: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.transcript-segment:hover { background: var(--screen-raised); }
+
+.transcript-segment.active {
+    background: var(--accent-tint);
+}
+
+.ts-time {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--monitor-dim);
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 1px;
+}
+
+.transcript-segment.active .ts-time {
+    color: var(--accent);
+}
+
+.ts-text {
+    font-size: 12px;
+    color: var(--monitor-glow);
+    line-height: 1.4;
+}
+
+/* Shortcuts panel */
+/* Settings modal */
+.settings-btn {
+    background: none;
+    border: 1px solid var(--screen-border);
+    border-radius: 4px;
+    color: var(--monitor-dim);
+    cursor: pointer;
+    padding: 3px 5px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.settings-btn:hover {
+    color: var(--monitor-glow);
+    border-color: var(--monitor-dim);
+}
+
+.help-btn {
+    background: none;
+    border: 1px solid var(--screen-border);
+    border-radius: 4px;
+    color: var(--monitor-dim);
+    cursor: pointer;
+    padding: 3px 7px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    line-height: 14px;
+    align-self: center;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.help-btn:hover {
+    color: var(--monitor-glow);
+    border-color: var(--monitor-dim);
+}
+
+.settings-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    /* Backdrop darkens AND warmly tints — feels like the rest of the
+       monitor goes to standby while the modal stays lit. */
+    background:
+        radial-gradient(ellipse at center, rgba(var(--accent-rgb), 0.15), transparent 60%),
+        rgba(0, 0, 0, 0.65);
+    z-index: 100;
+    backdrop-filter: blur(2px);
+}
+
+.settings-backdrop.visible { display: flex; align-items: center; justify-content: center; }
+
+.settings-modal {
+    background: var(--screen-elevated);
+    border: 1px solid var(--screen-border);
+    border-radius: 6px;
+    padding: 22px 26px;
+    min-width: 400px;
+    max-width: 480px;
+    font-size: 13px;
+    /* Floating: dark drop shadow + warm phosphor halo around the edge.
+       The amber inset glow at the top mimics a panel light bleeding in. */
+    box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(var(--accent-glow-rgb), 0.12),
+        inset 0 1px 0 rgba(var(--accent-glow-rgb), 0.1);
+    position: relative;
+}
+
+/* Amber tick mark on the modal — matches the header's accent rule. */
+.settings-modal::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 26px;
+    width: 36px;
+    height: 2px;
+    background: var(--accent);
+    box-shadow: var(--halo-soft);
+}
+
+.settings-modal h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--accent-bright);
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+    text-shadow: var(--halo-soft);
+}
+
+.settings-modal label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    color: var(--monitor-dim);
+}
+
+.settings-modal input[type="number"] {
+    width: 60px;
+    background: var(--screen-dark);
+    color: var(--monitor-glow);
+    border: 1px solid var(--screen-border);
+    border-radius: 4px;
+    padding: 4px;
+    padding-right: 2px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+}
+
+.settings-modal input[type="number"]:focus,
+.settings-modal select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.settings-modal select {
+    background: var(--screen-dark);
+    color: var(--monitor-glow);
+    border: 1px solid var(--screen-border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+}
+
+.settings-modal .settings-section {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--monitor-dim);
+    margin: 16px 0 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--screen-border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.settings-modal .settings-section::before {
+    content: '//';
+    color: var(--screen-border);
+}
+
+.settings-modal .settings-hint {
+    font-size: 10px;
+    color: var(--monitor-dim);
+    margin-top: 2px;
+}
+
+/* Theme picker — five accent swatches, each painted with its own
+   theme's glow color regardless of which theme is currently active.
+   The selected one gets a ring (the inner ring matches the modal
+   surface so it reads as a gap, the outer ring uses currentColor so
+   the highlight matches the swatch's hue). */
+.theme-picker {
+    display: flex;
+    gap: 10px;
+    margin: 6px 0 4px;
+}
+
+.theme-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--screen-border);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.12s ease-out, box-shadow 0.15s;
+}
+
+.theme-swatch:hover {
+    transform: scale(1.08);
+}
+
+.theme-swatch[aria-checked="true"] {
+    box-shadow:
+        0 0 0 2px var(--screen-elevated),
+        0 0 0 3px currentColor,
+        0 0 8px currentColor;
+    border-color: transparent;
+}
+
+.theme-swatch[data-theme="amber"]  { background: rgb(250, 204, 21);  color: rgb(250, 204, 21);  }
+.theme-swatch[data-theme="blue"]   { background: rgb(96, 165, 250);  color: rgb(96, 165, 250);  }
+.theme-swatch[data-theme="green"]  { background: rgb(34, 197, 94);   color: rgb(34, 197, 94);   }
+.theme-swatch[data-theme="purple"] { background: rgb(168, 85, 247);  color: rgb(168, 85, 247);  }
+.theme-swatch[data-theme="pink"]   { background: rgb(236, 72, 153);  color: rgb(236, 72, 153);  }
+
+.model-cache-info {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--monitor-dim);
+}
+
+.model-cache-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.model-cache-item .cache-name {
+    font-family: var(--font-mono);
+    font-size: 10px;
+}
+
+.model-cache-item .cache-size {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent);
+}
+
+/* Warm-up cache controls in the settings modal */
+.warmup-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin-top: 6px;
+}
+.warmup-row #warmupBtn {
+    background: var(--screen-raised);
+    color: var(--monitor-glow);
+    border: 1px solid var(--screen-border);
+    padding: 4px 12px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.warmup-row #warmupBtn:hover:not(:disabled) {
+    border-color: var(--accent-dim);
+    color: var(--accent-glow);
+}
+.warmup-row #warmupBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.warmup-status {
+    font-size: 11px;
+    color: var(--monitor-dim);
+    font-family: var(--font-mono);
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.warmup-progress {
+    margin-top: 6px;
+    height: 4px;
+    background: var(--screen-border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.warmup-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    transition: width 0.15s;
+}
+
+
+.settings-modal .settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.settings-modal .settings-actions button {
+    padding: 5px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid var(--screen-border);
+    background: var(--screen-raised);
+    color: var(--monitor-dim);
+}
+
+.settings-modal .settings-actions button:hover {
+    color: var(--monitor-glow);
+    border-color: var(--monitor-dim);
+}
+
+.settings-modal .settings-actions button.primary {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--monitor-glow);
+}
+
+.settings-modal .settings-actions button.primary:hover {
+    background: var(--accent-bg-hover);
+}
+
+.shortcuts-panel {
+    display: none;
+    background: var(--screen-dark);
+    border: 1px solid var(--screen-border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.shortcuts-panel.visible { display: block; }
+
+.shortcuts-panel h3 {
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    color: var(--monitor-dim);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.shortcuts-panel h3::before {
+    content: '//';
+    color: var(--screen-border);
+}
+
+.shortcuts-grid {
+    display: grid;
+    /* 3 columns × 5 rows comfortably fits the 13 shortcuts with two
+       empty cells, and keeps each column shorter so the panel reads
+       at a glance. Row gap gives the kbd chips room to breathe — the
+       old `gap: 0 32px` packed them edge-to-edge vertically. */
+    grid-template-rows: repeat(5, auto);
+    grid-auto-flow: column;
+    gap: 10px 32px;
+}
+
+.shortcuts-panel .shortcut-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.shortcuts-panel kbd {
+    display: inline-block;
+    background: var(--screen-raised);
+    border: 1px solid var(--screen-border);
+    border-radius: 3px;
+    padding: 0 5px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--monitor-glow);
+    min-width: 20px;
+    text-align: center;
+}
+
+.shortcuts-panel .action {
+    color: var(--monitor-dim);
+}
+
+/* Controls row (below detail waveform) */
+.controls-row {
+    display: none;
+    align-items: flex-end;
+    gap: 12px;
+    font-size: 12px;
+    width: 100%;
+}
+
+.controls-row.visible { display: flex; }
+
+.ctrl-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ctrl-field.label-field {
+    flex: 1;
+    min-width: 100px;
+}
+
+/* Field labels — quieter than section headers (.wf-label). No display
+   font, no halo, no // prefix. They sit next to inputs, not over them. */
+.ctrl-label {
+    font-size: 9px;
+    color: var(--monitor-dim);
+    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+}
+
+.ctrl-tc {
+    background: var(--screen-void);
+    color: var(--monitor-glow);
+    font-size: 12px;
+    font-family: var(--font-mono);
+    padding: 4px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--screen-border);
+    width: 80px;
+    outline: none;
+    text-align: center;
+}
+
+.ctrl-tc:focus {
+    border-color: var(--accent);
+}
+
+.ctrl-duration {
+    font-family: var(--font-mono);
+    color: var(--accent);
+    padding: 5px 0;
+}
+
+.ctrl-label-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ctrl-lock {
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--screen-void);
+    border: 1px solid var(--screen-border);
+    border-radius: 3px;
+    position: relative;
+}
+
+.ctrl-lock:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.ctrl-lock:checked::after {
+    content: '';
+    position: absolute;
+    top: 1px;
+    left: 4px;
+    width: 4px;
+    height: 8px;
+    border-right: 2px solid var(--screen-void);
+    border-bottom: 2px solid var(--screen-void);
+    transform: rotate(45deg);
+}
+
+.ctrl-label-input {
+    background: var(--screen-void);
+    color: var(--monitor-glow);
+    font-size: 12px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--screen-border);
+    flex: 1;
+    outline: none;
+    min-width: 0;
+}
+
+.ctrl-label-input:focus { border-color: var(--accent); }
+
+.ctrl-label-input:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+/* Jump button (ghost icon) */
+.ctrl-jump-btn {
+    background: transparent;
+    border: none;
+    color: var(--monitor-dim);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s, background 0.15s;
+}
+
+.ctrl-jump-btn:hover {
+    color: var(--monitor-glow);
+    background: var(--screen-raised);
+}
+
+/* Preview / Loop button (ghost with border) */
+.ctrl-preview-btn {
+    background: var(--screen-void);
+    color: var(--monitor-dim);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--screen-border);
+    cursor: pointer;
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.ctrl-preview-btn:hover {
+    background: var(--screen-raised);
+    color: var(--monitor-glow);
+}
+
+.ctrl-preview-btn.active {
+    background: var(--danger-bg);
+    color: var(--monitor-glow);
+    border-color: var(--danger);
+}
+
+.ctrl-preview-btn.active:hover {
+    background: var(--danger-bg-hover);
+}
+
+/* Bookmark button (accent bordered) */
+.ctrl-bookmark-btn {
+    background: var(--accent-bg);
+    color: var(--monitor-glow);
+    border: 1px solid var(--accent);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.ctrl-bookmark-btn:hover {
+    background: var(--accent-bg-hover);
+    border-color: var(--accent-glow);
+}
+
+.ctrl-bookmark-btn.bookmarked {
+    /* Bg derived from the current --success (74, 222, 128) so the tint
+       and the border/text colors agree. Was leftover from the old
+       --success (#3fb950) and had drifted out of sync with the palette. */
+    background: rgba(74, 222, 128, 0.15);
+    border-color: var(--success);
+    color: var(--success);
+    pointer-events: none;
+}
+
+/* Clip list */
+.clip-list-section {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.clip-list-section.visible { display: flex; }
+
+.clip-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.clip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+/* Bookmarks export — header button + modal. Modal is its own
+   small dialog rather than reusing .settings-modal so it can be
+   open on top of the bookmarks panel without disturbing the
+   settings UI. */
+.export-btn {
+    background: transparent;
+    color: var(--monitor-dim);
+    border: 1px solid var(--screen-border);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+}
+.export-btn:hover { color: var(--accent-glow); border-color: var(--accent-dim); }
+.export-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.export-backdrop {
+    position: fixed;
+    inset: 0;
+    /* Matches .settings-backdrop — warm radial tint + dark wash + blur,
+       so opening either modal feels like the same gesture. */
+    background:
+        radial-gradient(ellipse at center, rgba(var(--accent-rgb), 0.15), transparent 60%),
+        rgba(0, 0, 0, 0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 24px;
+    backdrop-filter: blur(2px);
+}
+.export-backdrop.visible { display: flex; }
+.export-modal {
+    /* Mirrors .settings-modal — elevated surface, warm halo shadow,
+       amber tick mark on the top edge. Both modals are sibling
+       components; they should read as the same class. */
+    background: var(--screen-elevated);
+    border: 1px solid var(--screen-border);
+    border-radius: 6px;
+    width: 100%;
+    max-width: 800px;
+    max-height: 80vh;
+    padding: 22px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(var(--accent-glow-rgb), 0.12),
+        inset 0 1px 0 rgba(var(--accent-glow-rgb), 0.1);
+    position: relative;
+}
+.export-modal::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 26px;
+    width: 36px;
+    height: 2px;
+    background: var(--accent);
+    box-shadow: var(--halo-soft);
+}
+.export-modal h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--accent-bright);
+    letter-spacing: 0.1em;
+    text-shadow: var(--halo-soft);
+}
+.export-format-row {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--monitor-dim);
+}
+.export-format-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.export-modal #exportPreview {
+    flex: 1;
+    min-height: 220px;
+    max-height: 50vh;
+    background: var(--screen-dark);
+    color: var(--monitor-glow);
+    border: 1px solid var(--screen-border);
+    border-radius: 3px;
+    padding: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.4;
+    resize: vertical;
+    white-space: pre;
+    overflow: auto;
+}
+.export-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+.export-actions button {
+    background: var(--screen-raised);
+    color: var(--monitor-glow);
+    border: 1px solid var(--screen-border);
+    padding: 4px 12px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.export-actions button:hover { border-color: var(--accent-dim); color: var(--accent-glow); }
+.export-actions button.primary { background: var(--accent-bg); }
+.export-actions button.primary:hover { background: var(--accent-bg-hover); }
+
+.clip-list-empty {
+    font-size: 12px;
+    color: var(--monitor-dim);
+    padding: 8px 0;
+}
+
+.clip-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.clip-item:hover { background: var(--screen-raised); }
+
+.clip-item.active { background: var(--accent-tint); }
+
+.clip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.clip-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+}
+
+.clip-item-label {
+    font-size: 12px;
+    color: var(--monitor-glow);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.clip-item-meta {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--monitor-dim);
+}
+
+.clip-item-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.clip-item:hover .clip-item-actions { opacity: 1; }
+@media (hover: none) { .clip-item-actions { opacity: 1; } }
+
+.clip-item-btn {
+    background: none;
+    border: 1px solid var(--screen-border);
+    border-radius: 3px;
+    color: var(--monitor-dim);
+    font-size: 10px;
+    padding: 2px 6px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.clip-item-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+}
+
+.clip-item-btn.copied-btn {
+    color: var(--success);
+    border-color: var(--success);
+}
+
+.clip-item-btn.encode-btn {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+}
+
+.clip-item-btn.encode-btn:hover {
+    color: var(--accent-glow);
+    border-color: var(--accent);
+}
+
+.clip-item-btn.encode-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.clip-item-btn.download-clip-btn {
+    color: var(--success);
+    border-color: var(--success);
+}
+
+.clip-item-btn.download-clip-btn:hover {
+    color: var(--success-bright);
+    border-color: var(--success-bright);
+}
+
+.clip-item-btn.delete-btn:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.clip-encode-progress {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 2px;
+}
+
+.clip-encode-bar {
+    height: 3px;
+    background: var(--screen-void);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.clip-encode-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.15s;
+}
+
+.clip-encode-text {
+    font-size: 9px;
+    color: var(--monitor-dim);
+    font-family: var(--font-mono);
+}
+
+/* Wrap around the overview time-ruler so the bookmark dots can sit
+   on top of it via absolute positioning. */
+.ruler-wrap {
+    position: relative;
+}
+
+/* Bookmark dots — one per clip, painted in that clip's color, centered
+   horizontally on its start time (the inline left:X% from JS lands on
+   the dot's CENTER via the negative-50% transform). Vertical alignment
+   pins to the ruler's bottom edge so the dots ride the tick marks
+   without obscuring the time labels above. */
+.overview-markers {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.clip-marker {
+    position: absolute;
+    bottom: -2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.5),
+        0 0 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Loading overlay — fixed full-viewport boot screen. All the layout
+   churn (section reveals, video metadata sizing, etc.) happens behind
+   this so the user sees one transition: drop-zone → loading screen →
+   fully-laid-out editor. */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    /* Centered glow tinted with the active accent — was hardcoded
+       amber-brown (#1a120a) which left the loading screen warm even
+       on blue/green/purple/pink themes. Compositing a low-alpha
+       accent on top of pure black gives the same visual depth while
+       following the theme. */
+    background:
+        radial-gradient(ellipse at center, rgba(var(--accent-rgb), 0.12) 0%, transparent 70%),
+        var(--black);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.loading-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.loading-title {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 7vw, 52px);
+    font-weight: 400;
+    color: var(--accent-bright);
+    letter-spacing: 0.12em;
+    margin-bottom: 20px;
+    user-select: none;
+    text-shadow:
+        0 0 12px rgba(var(--accent-glow-rgb), 0.7),
+        0 0 28px rgba(var(--accent-rgb), 0.45);
+}
+
+.progress-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    /* Wide enough that the longest "Polishing each frame by hand…" type
+       quip plus the trailing percentage fits on one line at the mono
+       uppercase + letter-spacing treatment below. */
+    width: min(420px, 90vw);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(var(--accent-rgb), 0.18);
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-glow));
+    border-radius: 2px;
+    transition: width 0.3s ease-out;
+    box-shadow: 0 0 6px rgba(var(--accent-glow-rgb), 0.7);
+}
+
+.progress-bar.indeterminate .progress-fill {
+    width: 30%;
+    animation: loader-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes loader-slide {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(350%); }
+    100% { transform: translateX(-100%); }
+}
+
+.loading-text {
+    font-size: 11px;
+    color: var(--overlay-text-dim);
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    display: flex;
+    gap: 6px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* Brick-breaker shown on the overlay after a long wait (see loading-game.js).
+   The class sets display:flex, so an explicit [hidden] rule is needed to win
+   over it and keep the game out of view until started. */
+.loading-game {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.loading-game[hidden] { display: none; }
+
+.loading-game-hint {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--overlay-text-dim);
+}
+
+.loading-game canvas {
+    width: min(480px, 92vw);
+    height: auto;
+    aspect-ratio: 480 / 320;
+    border: 1px solid rgba(var(--accent-rgb), 0.35);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.15);
+    touch-action: none;
+}
+
+/* Touch-friendly hit targets */
+@media (pointer: coarse) {
+    .ctrl-jump-btn,
+    .ctrl-preview-btn,
+    .ctrl-bookmark-btn { padding: 10px 16px; }
+    .clip-item-btn { padding: 6px 10px; font-size: 12px; }
+    .transcript-segment { padding: 8px 10px; }
+    .transcribe-btn { padding: 6px 12px; }
+}

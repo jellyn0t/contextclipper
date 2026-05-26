@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContextClipper</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#0b0d12">
+<script src="coi-serviceworker.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Share+Tech+Mono&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <h1>ContextClipper</h1>
+        <span class="subtitle">Drop a video file to get started</span>
+        <span class="source-mode" id="sourceMode" title="Where ffmpeg.wasm and Whisper are loaded from. Hover for details."></span>
+        <div class="dim-control">
+            <button class="dim-btn" id="dimBtn" title="Toggle video dimming">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+            <input type="range" class="dim-slider" id="dimSlider" min="0" max="1" step="0.05" value="1">
+        </div>
+        <button class="maximize-btn" id="maximizeBtn" title="Toggle wide layout (f)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </button>
+        <button class="settings-btn" id="settingsBtn" title="Settings">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button class="help-btn" id="helpBtn" title="Keyboard shortcuts (?)">?</button>
+        <div class="settings-backdrop" id="settingsBackdrop">
+        <div class="settings-modal">
+            <h3>Settings</h3>
+            <div class="settings-section">Theme</div>
+            <div class="theme-picker" id="themePicker" role="radiogroup" aria-label="Accent theme">
+                <button type="button" class="theme-swatch" data-theme="amber" role="radio" aria-checked="true" title="Amber"></button>
+                <button type="button" class="theme-swatch" data-theme="blue" role="radio" aria-checked="false" title="Blue"></button>
+                <button type="button" class="theme-swatch" data-theme="green" role="radio" aria-checked="false" title="Green"></button>
+                <button type="button" class="theme-swatch" data-theme="purple" role="radio" aria-checked="false" title="Purple"></button>
+                <button type="button" class="theme-swatch" data-theme="pink" role="radio" aria-checked="false" title="Pink"></button>
+            </div>
+            <div class="settings-section">Layout</div>
+            <label>Normal width (px) <input type="number" id="settingNormalWidth" min="400" max="3000" step="50"></label>
+            <label>Expanded width (px) <input type="number" id="settingExpandedWidth" min="400" max="3000" step="50"></label>
+            <div class="settings-hint">Toggle expanded with <kbd style="background:var(--screen-raised);border:1px solid var(--screen-border);border-radius:3px;padding:0 4px;font-size:11px;color:var(--monitor-glow)">f</kbd></div>
+            <label>Keyboard shortcuts
+                <select id="settingKeybinds">
+                    <option value="all">All enabled</option>
+                    <option value="minimal">Space only (play/pause)</option>
+                    <option value="none">Disabled</option>
+                </select>
+            </label>
+            <div class="settings-section">Copy Command (native ffmpeg)</div>
+            <label>CRF <input type="number" id="settingCopyCrf" min="0" max="51" step="1"></label>
+            <label>Preset
+                <select id="settingCopyPreset">
+                    <option value="ultrafast">ultrafast</option>
+                    <option value="superfast">superfast</option>
+                    <option value="veryfast">veryfast</option>
+                    <option value="faster">faster</option>
+                    <option value="fast">fast</option>
+                    <option value="medium">medium</option>
+                    <option value="slow">slow</option>
+                    <option value="slower">slower</option>
+                    <option value="veryslow">veryslow</option>
+                </select>
+            </label>
+            <label>Audio bitrate
+                <select id="settingCopyAudioBitrate">
+                    <option value="128k">128k</option>
+                    <option value="192k">192k</option>
+                    <option value="256k">256k</option>
+                    <option value="320k">320k</option>
+                </select>
+            </label>
+            <div class="settings-section">Browser Encode (wasm)</div>
+            <label>CRF <input type="number" id="settingWasmCrf" min="0" max="51" step="1"></label>
+            <label>Preset
+                <select id="settingWasmPreset">
+                    <option value="ultrafast">ultrafast</option>
+                    <option value="superfast">superfast</option>
+                    <option value="veryfast">veryfast</option>
+                    <option value="faster">faster</option>
+                    <option value="fast">fast</option>
+                    <option value="medium">medium</option>
+                    <option value="slow">slow</option>
+                </select>
+            </label>
+            <label>Audio bitrate
+                <select id="settingWasmAudioBitrate">
+                    <option value="128k">128k</option>
+                    <option value="192k">192k</option>
+                    <option value="256k">256k</option>
+                    <option value="320k">320k</option>
+                </select>
+            </label>
+            <div class="settings-hint">0 = lossless, 18 = high, 23 = default, 28 = low</div>
+            <div class="settings-section">Whisper Transcription</div>
+            <label>Model
+                <select id="settingWhisperModel">
+                    <option value="onnx-community/whisper-tiny.en">tiny.en (~40 MB)</option>
+                    <option value="onnx-community/whisper-base.en">base.en (~75 MB)</option>
+                </select>
+            </label>
+            <div class="settings-hint">Larger models are more accurate but slower to download and run</div>
+            <div id="modelCacheInfo" class="model-cache-info"></div>
+            <div class="settings-section">Cache Warm-up</div>
+            <div class="settings-hint">
+                Pre-download ffmpeg.wasm + transformers + the currently-selected Whisper model
+                so the first encode / transcribe doesn't pay the network cost. Cached responses
+                are stored by the browser HTTP cache (jsdelivr + HuggingFace both send long
+                max-age headers). Skip this if you're using LOCAL mode — it's already on disk.
+            </div>
+            <div class="warmup-row">
+                <button id="warmupBtn">Pre-download assets</button>
+                <span class="warmup-status" id="warmupStatus"></span>
+            </div>
+            <div class="warmup-progress" id="warmupProgress" hidden>
+                <div class="warmup-progress-fill" id="warmupProgressFill"></div>
+            </div>
+            <div class="settings-actions">
+                <button id="settingsCancel">Cancel</button>
+                <button class="primary" id="settingsApply">Apply</button>
+            </div>
+        </div>
+    </div>
+    </div><!-- .header -->
+
+    <div class="main-content">
+
+    <div class="video-player-glow">
+    <div class="video-area" id="videoArea">
+        <div class="drop-prompt">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span class="main-text">Tap or drop a video file</span>
+            <span class="sub-text">or browse to select</span>
+            <div class="url-row">
+                <input type="text" id="urlInput" placeholder="Paste a video URL">
+                <button type="button" id="urlLoadBtn">Load URL</button>
+            </div>
+        </div>
+        <video id="videoEl" style="display:none" playsinline></video>
+        <div class="video-dim-overlay" id="dimOverlay"></div>
+        <!-- Custom playback controls — sit above the dim overlay so the
+             user can still operate them when the video is dimmed. Default
+             HTML5 controls are stripped via the missing `controls` attr. -->
+        <div class="video-controls" id="videoControls">
+            <button class="vc-btn vc-play-btn" id="vcPlayBtn" type="button" aria-label="Play" title="Play / Pause (space)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20"/></svg>
+            </button>
+            <span class="vc-time" id="vcTimeDisplay">0:00 / 0:00</span>
+            <div class="vc-scrubber" id="vcScrubber">
+                <div class="vc-scrubber-fill" id="vcScrubberFill"></div>
+            </div>
+            <button class="vc-btn vc-mute-btn" id="vcMuteBtn" type="button" aria-label="Mute" title="Mute (m)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </button>
+            <input type="range" class="vc-volume" id="vcVolume" min="0" max="1" step="0.05" value="1" aria-label="Volume">
+        </div>
+        <input type="file" id="filePicker" accept="video/*" style="display:none">
+    </div>
+    </div><!-- .video-player-glow -->
+
+    <div class="file-info" id="fileInfo">
+        <span class="filename" id="fileName"></span>
+        <button class="clear-btn" id="clearBtn">Clear</button>
+    </div>
+
+    <div class="waveform-section" id="overviewSection">
+        <span class="wf-label">Overview</span>
+        <div class="ruler-wrap">
+            <time-ruler id="overviewRuler"></time-ruler>
+            <!-- Bookmark dots overlay the ruler instead of running as
+                 vertical bars through the waveform. Each dot's color
+                 matches its clip's color in the bookmarks list. -->
+            <div class="overview-markers" id="overviewMarkers"></div>
+        </div>
+        <div class="wf-wrap" style="position:relative">
+            <waveform-editor id="overviewWf" sample-rate="10" style="height:40px;--wf-bar-clip:var(--accent)"></waveform-editor>
+        </div>
+    </div>
+
+    <div class="waveform-section" id="detailSection">
+        <span class="wf-label">Detail</span>
+        <time-ruler id="detailRuler"></time-ruler>
+        <div class="wf-wrap">
+            <waveform-editor id="detailWf" sample-rate="10" style="height:60px;--wf-bar-clip:var(--accent);--wf-handle:var(--accent);--wf-handle-active:var(--accent-glow);--wf-region-border:rgba(var(--accent-rgb),0.6);--wf-region-bg:rgba(var(--accent-rgb),0.08);--wf-region-hover-bg:rgba(var(--accent-rgb),0.12);--wf-region-hover-border:rgba(var(--accent-glow-rgb),0.8)"></waveform-editor>
+        </div>
+    </div>
+
+    <div class="controls-row" id="controlsRow">
+        <div class="ctrl-field">
+            <span class="ctrl-label">Start</span>
+            <input type="text" class="ctrl-tc" id="startInput" value="0:00.0">
+        </div>
+        <div class="ctrl-field">
+            <span class="ctrl-label">End</span>
+            <input type="text" class="ctrl-tc" id="endInput" value="0:00.0">
+        </div>
+        <div class="ctrl-field">
+            <span class="ctrl-label">Duration</span>
+            <span class="ctrl-duration" id="durationDisplay">0.0s</span>
+        </div>
+        <button class="ctrl-jump-btn" id="playBtn" title="Jump to clip start">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        </button>
+        <div class="ctrl-field label-field">
+            <span class="ctrl-label">Clip Label</span>
+            <div class="ctrl-label-inner">
+                <input type="checkbox" class="ctrl-lock" id="labelLock" title="Edit label manually">
+                <input type="text" class="ctrl-label-input" id="labelInput" placeholder="Auto-generated label" disabled>
+            </div>
+        </div>
+        <button class="ctrl-preview-btn" id="loopBtn">Preview</button>
+        <button class="ctrl-bookmark-btn" id="bookmarkBtn">Bookmark</button>
+    </div>
+
+    <div class="ffmpeg-section" id="ffmpegSection">
+        <span class="wf-label">FFmpeg Command</span>
+        <div class="ffmpeg-row">
+            <div class="ffmpeg-cmd" id="ffmpegCmd"></div>
+            <button class="copy-btn" id="copyBtn">Copy</button>
+            <button class="encode-btn-main" id="encodeBtn">Encode</button>
+        </div>
+        <div class="encode-progress" id="encodeProgress">
+            <div class="encode-progress-bar"><div class="encode-progress-fill" id="encodeProgressFill"></div></div>
+            <span class="encode-progress-text" id="encodeProgressText"></span>
+        </div>
+    </div>
+
+    </div><!-- .main-content -->
+
+    <div class="sidebar" id="sidebar">
+        <div class="transcript-section" id="transcriptSection">
+            <div class="transcript-header">
+                <span class="wf-label">Transcript</span>
+                <button class="transcribe-btn" id="transcribeBtn">Transcribe</button>
+            </div>
+            <div class="transcript-progress" id="transcriptProgress">
+                <div class="transcript-progress-bar">
+                    <div class="transcript-progress-fill" id="transcriptProgressFill"></div>
+                </div>
+                <span class="transcript-progress-text" id="transcriptProgressText"></span>
+            </div>
+            <div class="transcript-list" id="transcriptList"></div>
+        </div>
+
+        <div class="clip-list-section" id="clipListSection">
+            <div class="clip-list-header">
+                <span class="wf-label" id="clipListLabel">Bookmarks</span>
+                <button class="export-btn" id="exportBtn" title="Export bookmarks">Export…</button>
+            </div>
+            <div class="clip-list" id="clipList"></div>
+        </div>
+    </div>
+
+    <div class="shortcuts-panel" id="shortcutsPanel">
+        <h3>Keyboard Shortcuts</h3>
+        <div class="shortcuts-grid">
+            <div class="shortcut-row"><span><kbd>Space</kbd> / <kbd>k</kbd></span> <span class="action">Play / Pause</span></div>
+            <div class="shortcut-row"><span><kbd>m</kbd></span> <span class="action">Toggle mute</span></div>
+            <div class="shortcut-row"><span><kbd>j</kbd></span> <span class="action">Seek back 10s</span></div>
+            <div class="shortcut-row"><span><kbd>l</kbd></span> <span class="action">Seek forward 10s</span></div>
+            <div class="shortcut-row"><span><kbd>,</kbd></span> <span class="action">Previous frame</span></div>
+            <div class="shortcut-row"><span><kbd>.</kbd></span> <span class="action">Next frame</span></div>
+            <div class="shortcut-row"><span><kbd>p</kbd></span> <span class="action">Toggle clip loop</span></div>
+            <div class="shortcut-row"><span><kbd>Shift</kbd>+<kbd>Space</kbd></span> <span class="action">Play from clip start</span></div>
+            <div class="shortcut-row"><span><kbd>s</kbd></span> <span class="action">Bookmark clip</span></div>
+            <div class="shortcut-row"><span><kbd>x</kbd></span> <span class="action">Delete selected clip</span></div>
+            <div class="shortcut-row"><span><kbd>t</kbd></span> <span class="action">Transcribe audio</span></div>
+            <div class="shortcut-row"><span><kbd>f</kbd></span> <span class="action">Toggle wide layout</span></div>
+            <div class="shortcut-row"><span><kbd>?</kbd></span> <span class="action">Toggle this panel</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Export modal — outside .app so the sidebar's `position: sticky`
+     stacking context doesn't trap it below the video. Opens from the
+     Bookmarks header. JSON is re-importable; the ffmpeg script
+     drops one `ffmpeg -ss X -t Y …` line per bookmark. -->
+<div class="export-backdrop" id="exportBackdrop">
+    <div class="export-modal">
+        <h3>Export bookmarks</h3>
+        <div class="export-format-row">
+            <label><input type="radio" name="exportFmt" value="json" checked> JSON</label>
+            <label><input type="radio" name="exportFmt" value="ffmpeg"> ffmpeg script</label>
+        </div>
+        <textarea id="exportPreview" readonly spellcheck="false"></textarea>
+        <div class="export-actions">
+            <button id="exportClose">Close</button>
+            <button id="exportCopy">Copy</button>
+            <button class="primary" id="exportDownload">Download</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- Loading overlay lives outside .app so its z-index isn't trapped
+     inside the .video-area / .video-player-glow stacking contexts
+     (both have z-index: 1). Position: fixed + z-index 1000 at the
+     root level now wins against every page element regardless of
+     in-page stacking. -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-title">ContextClipper</div>
+    <div class="progress-container">
+        <div class="progress-bar indeterminate" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="loading-text">
+            <span id="loadingPhrase">Loading</span>...
+            <span id="loadingPct"></span>
+        </div>
+    </div>
+    <div class="loading-game" id="loadingGame" hidden>
+        <div class="loading-game-hint">Long wait? Break some bricks — mouse or &larr; &rarr;</div>
+        <canvas id="loadingGameCanvas" width="480" height="320"></canvas>
+    </div>
+</div>
+
+<script type="module" src="editor.js"></script>
+</body>
+</html>

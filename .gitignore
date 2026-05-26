@@ -1,0 +1,10 @@
+# CDN-fetched at runtime; vendored only for offline/local mode via setup.sh
+vendor/
+models/
+
+# Sample video — too large for GitHub (100MiB file cap), not shipped
+video.mp4
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
